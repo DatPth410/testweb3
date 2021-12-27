@@ -12,10 +12,20 @@ contract ColorLand is ERC721, Ownable, AccessControl {
     uint256 private _price;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
 
     constructor(uint256 initPrice) ERC721("ColorLand", "CLX") {
         _price = initPrice;
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
+    }
+
+    function getTokenIds() public view returns (uint256) {
+        return _tokenIds.current();
+    }
+
+    function getInitPrice() public view returns (uint256) {
+        return _price;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -30,6 +40,11 @@ contract ColorLand is ERC721, Ownable, AccessControl {
 
     function getCurrentPrice() external view returns (uint256) {
         return _price;
+    }
+
+    function setApprove(address marketAddress) public returns (bool) {
+        setApprovalForAll(marketAddress, true);
+        return true;
     }
 
     function getOwner() external view returns (address) {
