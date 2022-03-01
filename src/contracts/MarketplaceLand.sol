@@ -29,8 +29,18 @@ contract MarketplaceLand {
         return index;
     }
 
-    function buyNftFromMarket(uint256 index) public returns (uint256) {
+    function buyNftFromMarket(uint256 index) public payable returns (uint256) {
+        require(
+            msg.value >= _landInfo[index].forSalePrice * 10**18,
+            "Error, Token costs more"
+        );
+        require(_landInfo[index].forSalePrice != uint256(0));
+        payable(_land.ownerOf(index)).transfer(
+            _landInfo[index].forSalePrice * 10**18
+        );
         _land.safeTransferFrom(_land.ownerOf(index), msg.sender, index);
+        _landInfo[index].lastSellPrice = _landInfo[index].forSalePrice;
+        _landInfo[index].forSalePrice = 0;
         return index;
     }
 

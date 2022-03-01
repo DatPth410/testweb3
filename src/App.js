@@ -26,11 +26,11 @@ function App() {
   const [colorFromAdress, setColorFromAddress] = useState(foo);
   const [tmpPrice, setTmpPrice] = useState(0);
   const [contractOwner, setContractOwner] = useState();
-  const [show, setShow] = useState(false);
+  const [show, setShow] = useState(-1);
   const [showMarket, setShowMarket] = useState(false);
 
-  const handleSellClose = () => setShow(false);
-  const handleSellButton = () => setShow(true);
+  const handleSellClose = () => setShow(-1);
+  // const handleSellButton = () => setShow(true);
 
   useEffect(() => {
     loadMetamask();
@@ -123,6 +123,19 @@ function App() {
     await marketplaceLandContract.methods
       .setSaleNfts(index, tmpPrice)
       .send({ from: account });
+    await handleApprove(index);
+    setShow(false);
+  };
+
+  const handleApprove = async (index) => {
+    console.log(
+      colorLandContractAddress,
+      marketplaceLandContractAddress,
+      account
+    );
+    await colorLandContract.methods
+      .approve(marketplaceLandContractAddress, index)
+      .send({ from: account });
   };
 
   const handleMint = async () => {
@@ -142,33 +155,11 @@ function App() {
 
   const handleBuyButton = async (index) => {
     console.log(index + 1);
+    console.log(sellPriceList[index]);
     await marketplaceLandContract.methods
       .buyNftFromMarket(index + 1)
-      .send({ from: account });
+      .send({ value: sellPriceList[index] * 10 ** 18, from: account });
     console.log("Hello");
-  };
-
-  const handleApprove = async () => {
-    console.log(colorLandContractAddress, marketplaceLandContractAddress);
-    let isApproved = await colorLandContract.methods
-      .isApprovedForAll(
-        colorLandContractAddress,
-        marketplaceLandContractAddress
-      )
-      .call();
-    console.log(isApproved);
-
-    await colorLandContract.methods
-      .setApprove(marketplaceLandContractAddress)
-      .send({ from: account });
-
-    isApproved = await colorLandContract.methods
-      .isApprovedForAll(
-        colorLandContractAddress,
-        marketplaceLandContractAddress
-      )
-      .call();
-    console.log(isApproved);
   };
 
   return (
@@ -241,7 +232,7 @@ function App() {
                     )}
                   </Card.Text>
                   {sellPriceList[index - 1] == 0 ? (
-                    <Button variant="primary" onClick={handleSellButton}>
+                    <Button variant="primary" onClick={() => setShow(index)}>
                       Sell Land
                     </Button>
                   ) : (
@@ -249,33 +240,27 @@ function App() {
                   )}
                 </Card.Body>
               </Card>
-
-              <Modal show={show} onHide={handleSellClose} animation={false}>
-                <Modal.Header closeButton>
-                  <Modal.Title>Sell NFT #{index}</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                  Sell this Land for:{" "}
-                  <input type="number" onChange={handlerChangePrice}></input>{" "}
-                  ETH
-                </Modal.Body>
-                <Modal.Footer>
-                  <Button variant="secondary" onClick={handleSellClose}>
-                    Close
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={() => handleSellClick(index)}
-                  >
-                    Sell
-                  </Button>
-                </Modal.Footer>
-              </Modal>
             </>
           );
         })}
       </Row>
-
+      <Modal show={show !== -1} onHide={handleSellClose} animation={false}>
+        <Modal.Header closeButton>
+          <Modal.Title>Sell NFT #{show}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Sell this Land for:{" "}
+          <input type="number" onChange={handlerChangePrice}></input> ETH
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleSellClose}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={() => handleSellClick(show)}>
+            Sell
+          </Button>
+        </Modal.Footer>
+      </Modal>
       <br />
       <br />
       <br />
